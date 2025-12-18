@@ -1,18 +1,21 @@
-# Tugas Praktikum PBO - Refactoring SOLID Principle
+# [INF2153] Proyek SOLID OOP Python
+## Pertemuan 11-12
 
-Repositori ini dibuat untuk memenuhi tugas mata kuliah Pemrograman Berorientasi Objek (Pertemuan 11).
+### Deskripsi Proyek
+Proyek ini mendemonstrasikan implementasi prinsip SOLID (SRP, OCP, DIP) pada sisitem checkout dengan menggunakan Abstraction (Interface) dan Dependency Injection.
 
-## Identifikasi Pelanggaran Prinsip Desain (Code Smell)
+### Truktur File
+'refector_solid.py': kode inti yang sudah di refaktor dan ditambahkan logging.
+'registrasi_sebelum': kode Latihan Mandiri sebelum refacetoring.
+'registrasi_sesudah': Kode Latihan Mandiri yang sudah di refacetoring dan ditambahkan logging.
+'README.md': Dokumen ini.
 
-Pada kode sebelum refactoring (`registrasi_sebelum.py`), ditemukan beberapa pelanggaran prinsip desain:
+### Cara Menjalankan
+1. Pastikan Python 3.x terinstal.
+2. Jalankan file utama dari terminal:
+    '''bash
+    python refactor_solid.py
+    '''
 
-1. **Single Responsibility Principle (SRP)**: Kelas `ValidatorManager` memiliki lebih dari satu alasan untuk berubah karena menangani logika validasi SKS sekaligus validasi prasyarat dalam satu metode tunggal.
-2. **Open/Closed Principle (OCP)**: Kode bersifat kaku. Jika terdapat aturan validasi baru (misalnya validasi keuangan), kita harus memodifikasi kelas yang sudah ada, bukan menambahkannya melalui ekstensi.
-3. **Dependency Inversion Principle (DIP)**: Logika bisnis bergantung langsung pada implementasi konkrit yang kaku (hardcoded), bukan pada sebuah abstraksi atau kontrak.
-
-## Hasil Refactoring
-
-Setelah proses refactoring (`registrasi_sesudah.py`), struktur kode telah diperbaiki dengan:
-- **Abstraksi**: Menggunakan `Abstract Base Class` (ABC) sebagai kontrak untuk semua aturan validasi.
-- **Modularitas**: Memecah tanggung jawab ke kelas-kelas kecil (`SKSValidator`, `PrerequisiteValidator`) yang masing-masing hanya memiliki satu tanggung jawab (SRP).
-- **Dependency Injection**: Menggunakan *constructor injection* pada `RegistrationService` sehingga kelas tersebut bergantung pada abstraksi, bukan implementasi konkrit.
+### Histori Perubahan (Log)
+Kode dikelola menggunakan git. Lihat [https://github.com/Nabiilah527/P11_PBO/commits/70ce55d216d4de1238d46956a1c7fee60ef1940f/]. 
