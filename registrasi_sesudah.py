@@ -1,68 +1,78 @@
+import logging
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 
-class Mahasiswa:
-    def __init__(self, nama, sks, prasyarat_lengkap):
-        self.nama = nama
-        self.sks = sks
-        self.prasyarat_lengkap = prasyarat_lengkap
+# Konfigurasi Logging 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s - %(name)s %(message)s'
+)
+LOGGER = logging.getLogger('CheckoutSystem')
 
-# --- IMPLEMENTASI SOLID ---
+@dataclass
+class Order:
+    customer_name: str
+    total_price: float
+    status: str = "open"
 
-# 1. Kontrak Abstraksi (DIP) 
-class IValidationRule(ABC):
-    """Kontrak untuk semua aturan validasi mahasiswa."""
+class IPaymentProcessor(ABC):
     @abstractmethod
-    def validate(self, mhs: Mahasiswa) -> bool:
-        """Method abstrak untuk memvalidasi data mahasiswa."""
+    def process(self, order: Order) -> bool:
         pass
 
-# 2. Implementasi SRP 
-class SKSValidator(IValidationRule):
-    """Aturan untuk memvalidasi batas maksimal SKS."""
-    def validate(self, mhs: Mahasiswa) -> bool:
-        """Memeriksa apakah jumlah SKS tidak melebihi batas 24 SKS.
+class INotificationService(ABC):
+    @abstractmethod
+    def send(self, order: Order):
+        pass
+
+class CheckoutService:
+    """Kelas high-level untuk mengkoordinasi proses transaksi pembayaran. 
+    
+    Kelas ini memisahkan logika pembayaran dan notifikasi (memenuhi SRP). 
+    """
+
+    def __init__(self, payment_processor: IPaymentProcessor, notifier: INotificationService):
+        """Menginisialisasi CheckoutService dengan dependensi yang diperlukan. 
 
         Args:
-            reg (Registrasi): Objek data registrasi.
+            payment_processor (IPaymentProcessor): Implementasi interface pembayaran. 
+            notifier (INotificationService): Implementasi interface notifikasi. 
+        """
+        self.payment_processor = payment_processor
+        self.notifier = notifier
+
+    def run_checkout(self, order: Order) -> bool:
+        """Menjalankan proses checkout dan memvalidasi pembayaran. 
+
+        Args:
+            order (Order): Objek pesanan yang akan diproses. 
 
         Returns:
-            bool: True jika valid, False jika melanggar.
+            bool: True jika checkout sukses, False jika gagal. 
         """
-        if mhs.sks <= 24:
-            return True
-        print(f"Log: SKS {mhs.sks} melampaui batas.")
-        return False
-
-class PrerequisiteValidator(IValidationRule):
-    def validate(self, mhs: Mahasiswa) -> bool:
-        if mhs.prasyarat_lengkap:
-            return True
-        print("Log: Prasyarat belum lengkap.")
-        return False
-
-# 3. Koordinator yang fleksibel (OCP & Dependency Injection) 
-class RegistrationService:
-    """Service untuk mengelola alur registrasi mahasiswa menggunakan prinsip SOLID."""
-    def __init__(self, rules: list):
-        self.rules = rules 
-
-    def run(self, mhs: Mahasiswa):
-        print(f"--- Memproses Registrasi: {mhs.nama} ---")
-        success = True
-        for rule in self.rules:
-            if not rule.validate(mhs):
-                success = False
+        LOGGER.info(f"Memulai checkout untuk {order.customer_name}. Total: {order.total_price}") 
         
-        if success:
-            print("Status: Registrasi Diterima!")
+        payment_success = self.payment_processor.process(order) 
+        
+        if payment_success: 
+            order.status = "paid" 
+            self.notifier.send(order) 
+            LOGGER.info("Checkout Sukses. Status pesanan: PAID.") 
+            return True 
         else:
-            print("Status: Registrasi Ditolak!")
+            LOGGER.error("Pembayaran gagal. Transaksi dibatalkan.") 
+            return False 
 
-# Simulasi Eksekusi
+# Implementasi konkrit untuk testing
+class CreditCardProcessor(IPaymentProcessor):
+    def process(self, order: Order) -> bool:
+        return True
+
+class EmailNotifier(INotificationService):
+    def send(self, order: Order):
+        pass
+
 if __name__ == "__main__":
-    mhs_budi = Mahasiswa("Budi", 20, True)
-    
-    aturan = [SKSValidator(), PrerequisiteValidator()]
-    
-    app = RegistrationService(aturan)
-    app.run(mhs_budi)
+    order_andi = Order("Andi", 500000)
+    service = CheckoutService(CreditCardProcessor(), EmailNotifier())
+    service.run_checkout(order_andi)
