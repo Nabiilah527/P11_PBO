@@ -10,13 +10,24 @@ class Mahasiswa:
 
 # 1. Kontrak Abstraksi (DIP) 
 class IValidationRule(ABC):
+    """Kontrak untuk semua aturan validasi mahasiswa."""
     @abstractmethod
     def validate(self, mhs: Mahasiswa) -> bool:
+        """Method abstrak untuk memvalidasi data mahasiswa."""
         pass
 
 # 2. Implementasi SRP 
 class SKSValidator(IValidationRule):
+    """Aturan untuk memvalidasi batas maksimal SKS."""
     def validate(self, mhs: Mahasiswa) -> bool:
+        """Memeriksa apakah jumlah SKS tidak melebihi batas 24 SKS.
+
+        Args:
+            reg (Registrasi): Objek data registrasi.
+
+        Returns:
+            bool: True jika valid, False jika melanggar.
+        """
         if mhs.sks <= 24:
             return True
         print(f"Log: SKS {mhs.sks} melampaui batas.")
@@ -31,6 +42,7 @@ class PrerequisiteValidator(IValidationRule):
 
 # 3. Koordinator yang fleksibel (OCP & Dependency Injection) 
 class RegistrationService:
+    """Service untuk mengelola alur registrasi mahasiswa menggunakan prinsip SOLID."""
     def __init__(self, rules: list):
         self.rules = rules 
 
